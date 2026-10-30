@@ -1,0 +1,21 @@
+# Compiled executables
+game
+game.exe
+*.exe
+
+# Object files and libraries
+*.o
+*.obj
+*.a
+
+# Build output
+build/
+bin/
+
+# Editor folders
+.vscode/
+.idea/
+
+# OS junk
+.DS_Store
+Thumbs.db
