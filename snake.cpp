@@ -7,6 +7,7 @@ Color green={173,204,96,255};
 Color darkGreen={43,51,24,255};
 float cellSize=30;
 float cellcount=20;
+int offset=50;
 double lastUpdateTime=0;
 bool ElementInDeque(Vector2 element,deque<Vector2>deque){
     for (unsigned int i = 0; i < deque.size(); i++)
@@ -37,7 +38,7 @@ class Snake{
         for(unsigned int i=0;i<body.size();i++){
             float x = body[i].x;
             float y= body[i].y;
-            Rectangle segment=Rectangle{x*cellSize,y*cellSize,cellSize,cellSize};
+            Rectangle segment=Rectangle{offset+x*cellSize,offset+y*cellSize,cellSize,cellSize};
             DrawRectangleRounded(segment,0.5,6,darkGreen);
            
         }
@@ -80,7 +81,7 @@ class Food{
     UnloadTexture(texture);
    }
    void Draw(){
-DrawTexture(texture,position.x*cellSize,position.y*cellSize,WHITE);   
+DrawTexture(texture,offset+position.x*cellSize,offset+position.y*cellSize,WHITE);   
 }
 Vector2 GenerateRandomCell(){
     float x=GetRandomValue(0,cellcount-1);
@@ -102,6 +103,19 @@ class Game{
     Snake snake =Snake();
     Food food = Food(snake.body);
     bool running= true;
+    Sound eatSound;
+    Sound wallSound;
+    int score=0;
+    Game(){
+        InitAudioDevice();
+        eatSound=LoadSound("Eat.mp3");
+        wallSound=LoadSound("Faah.mp3");
+    }
+    ~Game(){
+        UnloadSound(eatSound);
+        UnloadSound(wallSound);
+        CloseAudioDevice();
+    }
     void Draw(){
         food.Draw();
         snake.Draw();
@@ -119,6 +133,8 @@ class Game{
         {
             food.position = food.GenerateRandomPos(snake.body);
             snake.addsegment = true;
+            score++;
+            PlaySound(eatSound);
         }}
     void CheckCollisionWithEdges(){
         if (snake.body[0].x==cellcount||snake.body[0].x==-1)
@@ -133,6 +149,8 @@ class Game{
             snake.Reset();
             food.position=food.GenerateRandomPos(snake.body);
             running=false;
+            score=0;
+            PlaySound(wallSound);
         }
         void CheckCollisionWithTail(){
             deque<Vector2>headlessBody=snake.body;
@@ -147,7 +165,7 @@ class Game{
     };
 int main(){
     SetTargetFPS(60);
-    InitWindow(cellSize*cellcount,cellSize*cellcount,"Snake");
+    InitWindow(2*offset+cellSize*cellcount,2*offset+cellSize*cellcount,"Snake");
     TraceLog(LOG_INFO, "Working dir: %s", GetWorkingDirectory());
     TraceLog(LOG_INFO, "Exists: %d", FileExists("heart.png"));
        
@@ -176,6 +194,9 @@ int main(){
     
          BeginDrawing();
             ClearBackground(green);
+            DrawRectangleLinesEx(Rectangle{(float)offset-5,(float)offset-5,(float)cellSize*cellcount+10,(float)cellSize*cellcount+10},5,darkGreen);
+            DrawText("Snake",offset-5,1,50,darkGreen);
+            DrawText(TextFormat("%i",game.score),offset-5,offset+cellSize*cellcount+10,40,darkGreen);
             game.Draw();
            EndDrawing();
 
