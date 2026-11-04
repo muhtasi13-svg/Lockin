@@ -1,16 +1,28 @@
 #include <raylib.h>
 #include <iostream>
 #include <deque>
+#include <raymath.h>
 using namespace std;
 Color green={173,204,96,255};
 Color darkGreen={43,51,24,255};
-int cellSize=30;
-int cellcount=20;
+float cellSize=30;
+float cellcount=20;
+double lastUpdateTime=0;
+bool eventTriggered(double interval){
+    double currentTime=GetTime();
+    if (currentTime-lastUpdateTime>=interval){
+        lastUpdateTime=currentTime;
+        return true;
+    }
+    return false;
+}
+
 class Snake{
     public:
     deque<Vector2> body={Vector2{6,9},Vector2{5,9},Vector2{4,9}};
+    Vector2 direction={1,0};
     void Draw(){
-        for(int i=0;i<body.size();i++){
+        for(unsigned int i=0;i<body.size();i++){
             float x = body[i].x;
             float y= body[i].y;
             Rectangle segment=Rectangle{x*cellSize,y*cellSize,cellSize,cellSize};
@@ -18,8 +30,14 @@ class Snake{
            
         }
     }
+    void Update(){
+        body.pop_back();
+        body.push_front(Vector2Add(body[0],direction));
+
+    }
 };
 class Food{
+
    public:
    Vector2 position;
    Texture2D texture;
@@ -46,6 +64,20 @@ Vector2 GenerateRandomPos(){
     return Vector2{x,y};
 }
 };
+class Game{
+    public:
+    Snake snake =Snake();
+    Food food = Food();
+    void Draw(){
+        food.Draw();
+        snake.Draw();
+        
+    }
+    void Update(){
+        snake.Update();
+    }
+    
+};
 int main(){
     SetTargetFPS(60);
     InitWindow(cellSize*cellcount,cellSize*cellcount,"Snake");
@@ -53,13 +85,27 @@ int main(){
     TraceLog(LOG_INFO, "Exists: %d", FileExists("heart.png"));
        
     GetWorkingDirectory();
-    Food food = Food();
-    Snake snake= Snake();
+    Game game = Game();
     while (!WindowShouldClose()){
+        if(eventTriggered(0.2)){
+            game.Update();
+        }
+        if(IsKeyPressed(KEY_W)&& game.snake.direction.y!=1){
+            game.snake.direction={0,-1};
+        }
+        if(IsKeyPressed(KEY_S)&& game.snake.direction.y!=-1){
+            game.snake.direction={0,1};
+        }
+        if(IsKeyPressed(KEY_A)&& game.snake.direction.x!=1){
+            game.snake.direction={-1,0};
+        }
+        if(IsKeyPressed(KEY_D)&& game.snake.direction.x!=-1){
+            game.snake.direction={1,0};
+        }
+    
          BeginDrawing();
             ClearBackground(green);
-            food.Draw();
-            snake.Draw();
+            game.Draw();
            EndDrawing();
 
     }
